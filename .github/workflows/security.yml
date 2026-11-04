@@ -27,19 +27,10 @@ jobs:
         with:
           version: ${{ env.FOUNDRY_VERSION }}
 
-      # Собираются только контракты src: при сборке тестов Foundry 1.x добавляет в build-info
-      # служебные файлы foundry-pp/*, которых нет на диске, и crytic-compile завершается ошибкой.
-      - name: Build src (для Slither с ignore-compile)
-        run: forge build --build-info --skip "./test/**" --skip "./script/**"
-
+      # Slither 0.11.6 по uv.lock, как make ci (см. .github/actions/slither/action.yml).
       - name: Slither
-        id: slither
-        uses: crytic/slither-action@v0.4.2
+        uses: ./.github/actions/slither
         with:
-          ignore-compile: true
-          slither-version: 0.11.6
-          slither-config: slither.config.json
-          sarif: results.sarif
           # TODO (А6): порог блокировки. none - не блокировать; high - блокировать при находках high.
           fail-on: none
 
@@ -52,7 +43,7 @@ jobs:
           if-no-files-found: warn
 
       - name: SARIF в Code Scanning (только публичный репозиторий)
-        if: always() && github.event.repository.visibility == 'public'
+        if: always() && hashFiles('results.sarif') != '' && github.event.repository.visibility == 'public'
         uses: github/codeql-action/upload-sarif@v4
         with:
           sarif_file: results.sarif

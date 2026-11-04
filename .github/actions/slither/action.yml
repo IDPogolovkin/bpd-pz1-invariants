@@ -1,0 +1,24 @@
+# Slither на раннере по uv.lock - та же команда, что make slither и make ci.
+# Docker-образ crytic/slither-action не содержит forge, а crytic-compile вызывает forge при разборе
+# проекта Foundry, поэтому Slither запускается здесь; forge ставит шаг foundry-toolchain.
+name: slither
+description: Slither с отчётом SARIF и порогом блокировки
+inputs:
+  fail-on:
+    description: "Порог блокировки: none, low, medium, high, pedantic"
+    default: none
+runs:
+  using: composite
+  steps:
+    - name: Slither
+      shell: bash
+      env:
+        FAIL_ON: ${{ inputs.fail-on }}
+      run: |
+        case "$FAIL_ON" in
+          none|low|medium|high|pedantic) ;;
+          *) echo "fail-on: недопустимое значение '$FAIL_ON'"; exit 2 ;;
+        esac
+        curl -LsSf https://astral.sh/uv/install.sh | sh
+        export PATH="$HOME/.local/bin:$PATH"
+        uv run --locked slither . --config-file slither.config.json --sarif results.sarif --fail-"$FAIL_ON"

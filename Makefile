@@ -16,7 +16,7 @@ invariants:          ## только инвариантные тесты с тр
 	forge test --match-path "test/invariant/*" -vvvv
 
 slither: need-uv     ## статический анализ (без блокировки)
-	uv run --locked slither . --config-file slither.config.json
+	uv run --locked slither . --config-file slither.config.json --fail-none
 
 ci: need-uv          ## локальный аналог конвейера: security gate Slither (high) + тесты с профилем ci
 	uv run --locked slither . --config-file slither.config.json --fail-high

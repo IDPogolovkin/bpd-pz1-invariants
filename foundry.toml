@@ -1,0 +1,29 @@
+[profile.default]
+src = "src"
+out = "out"
+libs = ["lib"]
+solc = "0.8.28"
+evm_version = "cancun"
+remappings = [
+    "@openzeppelin/contracts/=lib/openzeppelin-contracts/contracts/",
+    "forge-std/=lib/forge-std/src/",
+]
+
+# Быстрые настройки по умолчанию: контрпример находится за секунды.
+[profile.default.fuzz]
+runs = 256
+
+[profile.default.invariant]
+runs = 64
+depth = 32
+fail_on_revert = false
+
+# Конвейер CI: больше прогонов, фиксированный seed для воспроизводимости.
+[profile.ci.fuzz]
+runs = 1000
+seed = "0x2026"
+
+[profile.ci.invariant]
+runs = 256
+depth = 64
+fail_on_revert = false

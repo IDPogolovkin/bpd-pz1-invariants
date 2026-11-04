@@ -1,0 +1,7 @@
+out/
+cache/
+broadcast/
+.venv/
+__pycache__/
+results.sarif
+check-result-*.txt

@@ -1,0 +1,11 @@
+{
+  "name": "BPD 2024 - ПЗ1 (Foundry, Slither)",
+  "image": "mcr.microsoft.com/devcontainers/base:bookworm",
+  "postCreateCommand": "bash .devcontainer/setup.sh",
+  "hostRequirements": { "cpus": 2 },
+  "customizations": {
+    "vscode": {
+      "extensions": ["NomicFoundation.hardhat-solidity", "ms-python.python"]
+    }
+  }
+}

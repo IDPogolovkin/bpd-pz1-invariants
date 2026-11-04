@@ -1,0 +1,72 @@
+# Security gate: Slither (статический анализ) + forge test (fuzz и инвариантные тесты).
+# Отчёт Slither в формате SARIF сохраняется как artifact всегда; в GitHub Code Scanning
+# он загружается только для публичного репозитория (для приватного нужна GitHub Advanced Security).
+name: security
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+env:
+  FOUNDRY_VERSION: v1.8.5
+
+jobs:
+  slither:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      security-events: write
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: foundry-rs/foundry-toolchain@v1
+        with:
+          version: ${{ env.FOUNDRY_VERSION }}
+
+      - name: Build (для Slither с ignore-compile)
+        run: forge build --build-info
+
+      - name: Slither
+        id: slither
+        uses: crytic/slither-action@v0.4.2
+        with:
+          ignore-compile: true
+          slither-version: 0.11.6
+          slither-config: slither.config.json
+          sarif: results.sarif
+          # TODO (А6): порог блокировки. none - не блокировать; high - блокировать при находках high.
+          fail-on: none
+
+      - name: SARIF как artifact
+        if: always()
+        uses: actions/upload-artifact@v6
+        with:
+          name: slither-sarif
+          path: results.sarif
+          if-no-files-found: warn
+
+      - name: SARIF в Code Scanning (только публичный репозиторий)
+        if: always() && github.event.repository.visibility == 'public'
+        uses: github/codeql-action/upload-sarif@v4
+        with:
+          sarif_file: results.sarif
+          category: slither
+
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: foundry-rs/foundry-toolchain@v1
+        with:
+          version: ${{ env.FOUNDRY_VERSION }}
+
+      - name: forge test
+        run: forge test -vvv
+        env:
+          # TODO (А6): профиль ci - больше прогонов фаззера и фиксированный seed (см. foundry.toml).
+          FOUNDRY_PROFILE: default
